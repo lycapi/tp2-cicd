@@ -95,3 +95,11 @@ def test_should_return_max_when_value_is_above_max():
 def test_should_return_zero_when_min_max_value_are_zero():
     result = clamp(0, 0, 0)
     assert result == 0
+
+
+def test_should_sort_students_by_grade_ascending():
+    from src.utils import sort_students
+    students = [{"name": "Bob", "grade": 12}, {"name": "Alice", "grade": 18}]
+    res = sort_students(students, sort_by="grade", order="asc")
+    assert res[0]["name"] == "Bob"
+
