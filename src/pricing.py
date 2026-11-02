@@ -75,3 +75,23 @@ def apply_promo_code(subtotal, promo_code, promo_codes_db=None):
     new_subtotal = max(0.0, subtotal - discount)
 
     return {"discount": round(discount, 2), "new_subtotal": round(new_subtotal, 2)}
+
+
+def calculate_surge(hour, day_of_week):
+    """Calcule le multiplicateur de livraison (surge) selon le jour et l'heure."""
+    day = day_of_week.lower().strip()
+
+    if hour < 10 or hour >= 22:
+        return 0.0
+
+    if day in ["vendredi", "samedi"] and 19 <= hour < 22:
+        return 1.8
+    elif day == "dimanche":
+        return 1.2
+    elif day in ["lundi", "mardi", "mercredi", "jeudi"]:
+        if 12 <= hour < 14:
+            return 1.3
+        elif 19 <= hour < 21:
+            return 1.5
+
+    return 1.0

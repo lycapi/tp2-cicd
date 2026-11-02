@@ -99,3 +99,39 @@ def test_should_raise_error_when_subtotal_is_negative_or_none():
         apply_promo_code(-10.0, "REDUC5")
     with pytest.raises(ValueError, match="positif"):
         apply_promo_code(None, "REDUC5")
+
+
+from src.pricing import calculate_surge
+
+
+def test_should_return_normal_multiplier_during_regular_weekday_hours():
+    assert calculate_surge(15, "mardi") == 1.0
+
+
+def test_should_return_lunch_surge_on_weekdays():
+    assert calculate_surge(12, "mardi") == 1.3
+
+
+def test_should_return_dinner_surge_on_weekdays():
+    assert calculate_surge(20, "jeudi") == 1.5
+
+
+def test_should_return_weekend_night_surge():
+    assert calculate_surge(20, "vendredi") == 1.8
+    assert calculate_surge(21, "samedi") == 1.8
+
+
+def test_should_return_sunday_surge():
+    assert calculate_surge(14, "dimanche") == 1.2
+
+
+def test_should_return_zero_surge_when_closed_at_night():
+    assert calculate_surge(23, "lundi") == 0.0
+
+
+def test_should_return_zero_surge_when_closed_early_morning():
+    assert calculate_surge(8, "lundi") == 0.0
+
+
+def test_should_handle_exact_opening_boundary_at_10am():
+    assert calculate_surge(10, "lundi") == 1.0
