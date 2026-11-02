@@ -21,3 +21,32 @@ def simulate_order():
         return jsonify(res), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+
+@app.route("/orders", methods=["POST"])
+def create_order():
+    global order_counter
+    data = request.get_json() or {}
+    try:
+        pricing = calculate_order_total(
+            items=data.get("items", []),
+            distance=data.get("distance"),
+            weight=data.get("weight"),
+            promo_code=data.get("promoCode"),
+            hour=data.get("hour", 12),
+            day_of_week=data.get("dayOfWeek", "mardi"),
+        )
+        order = {"id": order_counter, "items": data.get("items"), "pricing": pricing}
+        orders_db[order_counter] = order
+        order_counter += 1
+        return jsonify(order), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def get_order(order_id):
+    order = orders_db.get(order_id)
+    if not order:
+        return jsonify({"error": "Commande non trouvée"}), 404
+    return jsonify(order), 200
