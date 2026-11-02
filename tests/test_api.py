@@ -48,7 +48,8 @@ def test_should_return_400_when_simulation_restaurant_is_closed(client):
 
 
 def test_should_return_400_when_simulation_promo_code_has_expired(client):
-    payload = {"items": [{"name": "Pizza", "price": 20.0, "quantity": 1}], "distance": 2.0, "weight": 1.0, "promoCode": "EXPIRE10"}
+    payload = {"items": [{"name": "Pizza", "price": 20.0, "quantity": 1}],
+               "distance": 2.0, "weight": 1.0, "promoCode": "EXPIRE10"}
     res = client.post("/orders/simulate", json=payload)
     assert res.status_code == 400
 
@@ -59,7 +60,8 @@ def test_should_return_400_when_simulation_items_list_is_empty(client):
 
 
 def test_should_return_200_and_apply_weekend_surge_in_simulation(client):
-    payload = {"items": [{"name": "Pizza", "price": 10.0, "quantity": 1}], "distance": 2.0, "weight": 1.0, "hour": 20, "dayOfWeek": "vendredi"}
+    payload = {"items": [{"name": "Pizza", "price": 10.0, "quantity": 1}],
+               "distance": 2.0, "weight": 1.0, "hour": 20, "dayOfWeek": "vendredi"}
     res = client.post("/orders/simulate", json=payload)
     assert res.status_code == 200
     assert res.json["surge"] == 1.8
