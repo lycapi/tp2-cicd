@@ -95,3 +95,40 @@ def calculate_surge(hour, day_of_week):
             return 1.5
 
     return 1.0
+
+
+def calculate_order_total(items, distance, weight, promo_code=None, hour=12, day_of_week="mardi"):
+    """Calcule le total complet d'une commande."""
+    if not items:
+        raise ValueError("La liste des articles ne peut pas être vide")
+
+    subtotal = 0.0
+    for item in items:
+        price = item.get("price", 0)
+        qty = item.get("quantity", 0)
+        if price < 0 or qty <= 0:
+            raise ValueError("Prix ou quantité d'article invalide")
+        subtotal += price * qty
+
+    subtotal = round(subtotal, 2)
+
+    promo_res = apply_promo_code(subtotal, promo_code)
+    discount = promo_res["discount"]
+    subtotal_after_discount = promo_res["new_subtotal"]
+
+    delivery_fee = calculate_delivery_fee(distance, weight)
+    surge = calculate_surge(hour, day_of_week)
+
+    if surge == 0.0:
+        raise ValueError("Le service de livraison est fermé à cette heure")
+
+    final_delivery_fee = round(delivery_fee * surge, 2)
+    total = round(subtotal_after_discount + final_delivery_fee, 2)
+
+    return {
+        "subtotal": subtotal,
+        "discount": discount,
+        "deliveryFee": final_delivery_fee,
+        "surge": surge,
+        "total": total,
+    }

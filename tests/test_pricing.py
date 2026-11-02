@@ -135,3 +135,76 @@ def test_should_return_zero_surge_when_closed_early_morning():
 
 def test_should_handle_exact_opening_boundary_at_10am():
     assert calculate_surge(10, "lundi") == 1.0
+
+
+from src.pricing import calculate_order_total
+
+
+def test_should_calculate_full_order_total_standard():
+    items = [{"name": "Pizza", "price": 12.50, "quantity": 2}]
+    res = calculate_order_total(items, distance=2.0, weight=1.0, hour=15, day_of_week="mardi")
+    assert res["subtotal"] == 25.0
+    assert res["discount"] == 0.0
+    assert res["deliveryFee"] == 2.0
+    assert res["total"] == 27.0
+
+
+def test_should_calculate_order_total_with_promo_and_surge():
+    items = [{"name": "Burger", "price": 10.0, "quantity": 3}]
+    res = calculate_order_total(items, distance=2.0, weight=1.0, promo_code="BIENVENUE20", hour=12, day_of_week="mardi")
+    assert res["subtotal"] == 30.0
+    assert res["discount"] == 6.0
+    assert res["deliveryFee"] == 2.6  # 2.0 * 1.3
+    assert res["total"] == 26.6  # (30 - 6) + 2.6
+
+
+def test_should_calculate_order_total_with_fixed_promo_and_weekend_surge():
+    items = [{"name": "Sushi", "price": 20.0, "quantity": 1}]
+    res = calculate_order_total(items, distance=5.0, weight=2.0, promo_code="REDUC5", hour=20, day_of_week="vendredi")
+    assert res["subtotal"] == 20.0
+    assert res["discount"] == 5.0
+    assert res["deliveryFee"] == 5.4  # (2 + (5-3)*0.5) * 1.8 = 3.0 * 1.8
+    assert res["total"] == 20.4
+
+
+def test_should_raise_error_when_items_list_is_empty():
+    with pytest.raises(ValueError, match="ne peut pas être vide"):
+        calculate_order_total([], distance=2.0, weight=1.0)
+
+
+def test_should_raise_error_when_item_price_is_negative():
+    with pytest.raises(ValueError, match="invalide"):
+        calculate_order_total([{"name": "A", "price": -5.0, "quantity": 1}], distance=2.0, weight=1.0)
+
+
+def test_should_raise_error_when_item_quantity_is_zero_or_negative():
+    with pytest.raises(ValueError, match="invalide"):
+        calculate_order_total([{"name": "A", "price": 5.0, "quantity": 0}], distance=2.0, weight=1.0)
+
+
+def test_should_raise_error_when_ordering_outside_opening_hours():
+    items = [{"name": "Pizza", "price": 12.50, "quantity": 1}]
+    with pytest.raises(ValueError, match="fermé"):
+        calculate_order_total(items, distance=2.0, weight=1.0, hour=23, day_of_week="mardi")
+
+
+def test_should_raise_error_when_delivery_distance_exceeds_limit():
+    items = [{"name": "Pizza", "price": 12.50, "quantity": 1}]
+    with pytest.raises(ValueError, match="Livraison impossible"):
+        calculate_order_total(items, distance=12.0, weight=1.0)
+
+
+def test_should_sum_multiple_distinct_items_correctly():
+    items = [
+        {"name": "Burger", "price": 10.0, "quantity": 2},
+        {"name": "Frites", "price": 4.0, "quantity": 1},
+        {"name": "Boisson", "price": 3.0, "quantity": 2},
+    ]
+    res = calculate_order_total(items, distance=1.0, weight=1.0)
+    assert res["subtotal"] == 30.0
+
+
+def test_should_raise_error_when_invalid_promo_is_passed_to_order():
+    items = [{"name": "Pizza", "price": 10.0, "quantity": 2}]
+    with pytest.raises(ValueError, match="invalide ou inconnu"):
+        calculate_order_total(items, distance=1.0, weight=1.0, promo_code="INVALID_CODE")
