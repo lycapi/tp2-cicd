@@ -1,0 +1,60 @@
+# ==============================================================================
+# NOM DU WORKFLOW
+# ==============================================================================
+# Nom affiché dans l'onglet "Actions" de votre dépôt GitHub
+name: CI Pipeline TP2
+
+# ==============================================================================
+# TRIGGERS (Événements déclencheurs)
+# ==============================================================================
+# Définit QUAND le pipeline s'exécute automatiquement
+on:
+  # Déclenché lors de chaque 'push' sur les branches principales
+  push:
+    branches: [ main, master ]
+
+  # Déclenché lors de chaque 'pull request' vers les branches principales
+  pull_request:
+    branches: [ main, master ]
+
+  # Permet de lancer manuellement le pipeline depuis l'interface GitHub
+  workflow_dispatch:
+
+# ==============================================================================
+# JOBS (Ensemble des tâches à exécuter)
+# ==============================================================================
+jobs:
+
+  # --- JOB 1 : QUALITÉ ET TESTS ---
+  quality-and-tests:
+    name: Qualité & Tests Automatisés   # Nom du job affiché dans l'UI GitHub
+    runs-on: ubuntu-latest               # Machine virtuelle Linux (runner)
+
+    steps:
+      # Étape 1 : Récupérer le code source du projet
+      # Indispensable : sans cette action, le runner a un dossier vide !
+      - name: Checkout du code source
+        uses: actions/checkout@v4
+
+      # Étape 2 : Configurer l'environnement Python
+      - name: Configuration de Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'                  # Met en cache les paquets pip pour accélérer les futurs builds
+
+      # Étape 3 : Installer pip et les dépendances du projet
+      - name: Installation des dépendances Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Étape 4 : Analyser le code avec le linter (flake8)
+      # Vérifie le respect du style PEP 8 et la propreté du code
+      - name: Vérification du code avec Flake8 (Linting)
+        run: flake8 .
+
+      # Étape 5 : Exécuter la suite de tests et contrôler la couverture
+      # Le pipeline passe au ROUGE (échec) si la couverture est inférieure à 80%
+      - name: Exécution des tests Pytest et contrôle de la couverture (>= 80%)
+        run: pytest --cov=src --cov-fail-under=80
