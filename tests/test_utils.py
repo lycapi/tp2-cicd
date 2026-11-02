@@ -1,4 +1,4 @@
-from src.utils import capitalize, calculate_average, slugify, clamp
+from src.utils import capitalize, calculate_average, slugify, clamp, sort_students
 
 
 # --- Tests capitalize ---
@@ -103,3 +103,25 @@ def test_should_sort_students_by_grade_ascending():
     res = sort_students(students, sort_by="grade", order="asc")
     assert res[0]["name"] == "Bob"
 
+
+def test_should_sort_students_by_grade_descending():
+    students = [{"name": "Bob", "grade": 12}, {"name": "Alice", "grade": 18}]
+    res = sort_students(students, sort_by="grade", order="desc")
+    assert res[0]["name"] == "Alice"
+
+
+def test_should_sort_students_by_name_ascending():
+    students = [{"name": "Bob", "grade": 12}, {"name": "Alice", "grade": 18}]
+    res = sort_students(students, sort_by="name", order="asc")
+    assert res[0]["name"] == "Alice"
+
+
+def test_should_return_empty_array_when_students_is_empty_or_none():
+    assert sort_students([]) == []
+    assert sort_students(None) == []
+
+
+def test_should_not_modify_original_array_when_sorting():
+    students = [{"name": "Bob", "grade": 12}, {"name": "Alice", "grade": 18}]
+    sort_students(students, sort_by="grade", order="asc")
+    assert students[0]["name"] == "Bob"
