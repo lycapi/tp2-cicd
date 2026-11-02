@@ -126,3 +126,34 @@ def test_should_retrieve_second_order_independently(client):
     get_res = client.get(f"/orders/{id2}")
     assert get_res.status_code == 200
     assert get_res.json["pricing"]["subtotal"] == 20.0
+
+
+def test_should_return_200_when_validating_a_correct_promo_code(client):
+    res = client.post("/promo/validate", json={"code": "BIENVENUE20", "subtotal": 30.0})
+    assert res.status_code == 200
+    assert res.json["valid"] is True
+
+
+def test_should_return_400_when_validating_an_expired_promo_code(client):
+    res = client.post("/promo/validate", json={"code": "EXPIRE10", "subtotal": 30.0})
+    assert res.status_code == 400
+    assert res.json["valid"] is False
+
+
+def test_should_return_400_when_subtotal_is_below_minimum_required(client):
+    res = client.post("/promo/validate", json={"code": "BIENVENUE20", "subtotal": 10.0})
+    assert res.status_code == 400
+    assert res.json["valid"] is False
+
+
+def test_should_return_400_when_validating_an_unknown_promo_code(client):
+    res = client.post("/promo/validate", json={"code": "UNKNOWN", "subtotal": 30.0})
+    assert res.status_code == 400
+    assert res.json["valid"] is False
+
+
+def test_should_return_200_with_zero_discount_when_body_is_empty(client):
+    res = client.post("/promo/validate", json={})
+    assert res.status_code == 200
+    assert res.json["valid"] is True
+    assert res.json["details"]["discount"] == 0.0

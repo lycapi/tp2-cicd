@@ -50,3 +50,16 @@ def get_order(order_id):
     if not order:
         return jsonify({"error": "Commande non trouvée"}), 404
     return jsonify(order), 200
+
+
+@app.route("/promo/validate", methods=["POST"])
+def validate_promo():
+    data = request.get_json() or {}
+    promo_code = data.get("code")
+    subtotal = data.get("subtotal", 0.0)
+
+    try:
+        res = apply_promo_code(subtotal, promo_code)
+        return jsonify({"valid": True, "details": res}), 200
+    except ValueError as e:
+        return jsonify({"valid": False, "error": str(e)}), 400
